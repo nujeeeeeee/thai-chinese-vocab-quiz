@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เกมเรียงคำ ไทย-จีน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700;900&family=Noto+Serif+Thai:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDEFE5;
+    --paper-card:#F8F8F2;
+    --ink:#1B2A44;
+    --ink-soft:#4B5768;
+    --seal:#AE3428;
+    --seal-dark:#8A2A20;
+    --gold:#B8912F;
+    --line:#D8D8CC;
+    --correct:#2F6B4F;
+    --correct-bg:#E4EFE6;
+    --wrong:#AE3428;
+    --wrong-bg:#F5E4E1;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    background-image:
+      radial-gradient(circle at 10% 5%, rgba(184,145,47,0.06), transparent 40%),
+      radial-gradient(circle at 90% 90%, rgba(174,52,40,0.05), transparent 40%);
+    color:var(--ink);
+    font-family:'Noto Serif Thai', serif;
+    -webkit-font-smoothing:antialiased;
+    padding:28px 16px 60px;
+  }
+  .page{max-width:640px;margin:0 auto;}
+
+  header.hero{text-align:center;padding:10px 20px 20px;}
+  .seal-mark{
+    width:52px;height:52px;margin:0 auto 12px;
+    border:3px solid var(--seal);
+    border-radius:6px;
+    display:flex;align-items:center;justify-content:center;
+    transform:rotate(-4deg);
+    color:var(--seal);
+    font-family:'Noto Serif SC', serif;
+    font-weight:900;
+    font-size:20px;
+    opacity:0.9;
+  }
+  h1{
+    font-family:'Noto Serif SC','Noto Serif Thai', serif;
+    font-weight:900;
+    font-size:clamp(24px, 5vw, 32px);
+    margin:0 0 6px;
+  }
+  header.hero p{margin:0;color:var(--ink-soft);font-size:14px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;letter-spacing:3px;text-transform:uppercase;
+    color:var(--gold);margin-bottom:8px;
+  }
+  a.back-link{
+    display:inline-block;margin-top:10px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;color:var(--ink-soft);
+    text-decoration:none;border-bottom:1px dashed var(--ink-soft);
+  }
+
+  .tabs{
+    display:flex;gap:2px;
+    border-bottom:2px solid var(--ink);
+    margin:20px 0 20px;
+  }
+  .tab-btn{
+    flex:1;background:transparent;border:none;
+    padding:13px 8px;
+    font-family:'Noto Serif Thai', serif;font-weight:700;font-size:14.5px;
+    color:var(--ink-soft);cursor:pointer;
+    border-bottom:3px solid transparent;margin-bottom:-2px;
+    transition:color .2s, border-color .2s;
+  }
+  .tab-btn.active{color:var(--seal);border-bottom-color:var(--seal);}
+
+  .mode-section{display:none;}
+  .mode-section.active{display:block;}
+
+  .status-bar{
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--paper-card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px 16px;
+    margin-bottom:18px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+  .status-bar b{color:var(--ink);}
+
+  .game-card{
+    background:var(--paper-card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:22px 18px;
+  }
+
+  .clue{text-align:center;margin-bottom:6px;}
+  .clue .label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;letter-spacing:2px;text-transform:uppercase;
+    color:var(--gold);
+  }
+  .clue .stem{
+    font-weight:700;
+    font-size:19px;
+    margin-top:6px;
+    line-height:1.4;
+    font-family:'Noto Serif Thai','Noto Serif SC', serif;
+  }
+  .hint-toggle{
+    display:block;margin:10px auto 0;
+    background:none;border:1px solid var(--line);border-radius:20px;
+    padding:5px 14px;font-family:'IBM Plex Mono', monospace;font-size:11px;
+    color:var(--ink-soft);cursor:pointer;
+  }
+  .hint-toggle.on{border-color:var(--gold);color:var(--gold);}
+  .hint-display{
+    text-align:center;margin-top:8px;font-family:'IBM Plex Mono', monospace;
+    font-size:13px;color:var(--ink-soft);min-height:18px;
+  }
+
+  .answer-slots{
+    display:flex;flex-wrap:wrap;justify-content:center;gap:7px;
+    margin:22px 0 18px;
+    min-height:52px;
+  }
+  .slot{
+    min-width:38px;height:46px;padding:0 4px;
+    border:2px solid var(--line);
+    border-bottom:3px solid var(--ink-soft);
+    border-radius:8px;
+    background:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Noto Serif SC','Noto Serif Thai', serif;
+    font-size:19px;
+    color:var(--ink);
+    cursor:pointer;
+    transition:border-color .15s, transform .1s;
+  }
+  .slot:empty{background:transparent;}
+  .slot.filled:hover{transform:translateY(-2px);}
+  .answer-slots.correct .slot{border-color:var(--correct);background:var(--correct-bg);color:var(--correct);}
+  .answer-slots.wrong .slot{border-color:var(--wrong);background:var(--wrong-bg);}
+  .answer-slots.shake{animation:shake .35s;}
+  @keyframes shake{
+    0%,100%{transform:translateX(0);}
+    25%{transform:translateX(-6px);}
+    75%{transform:translateX(6px);}
+  }
+
+  .tile-pool{
+    display:flex;flex-wrap:wrap;justify-content:center;gap:9px;
+    padding:16px 0 6px;
+    border-top:1px dashed var(--line);
+  }
+  .tile{
+    min-width:40px;height:48px;padding:0 5px;
+    background:#fff;
+    border:2px solid var(--ink);
+    border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Noto Serif SC','Noto Serif Thai', serif;
+    font-size:20px;
+    font-weight:500;
+    color:var(--ink);
+    cursor:pointer;
+    box-shadow:0 3px 0 var(--ink);
+    transition:transform .1s, box-shadow .1s, opacity .15s;
+  }
+  .tile:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink);}
+  .tile.used{opacity:0;pointer-events:none;transform:scale(0.7);}
+
+  .controls{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;}
+  .btn{
+    flex:1;min-width:100px;padding:13px;
+    border:none;border-radius:8px;
+    font-family:'Noto Serif Thai', serif;font-weight:700;font-size:14.5px;
+    cursor:pointer;transition:opacity .15s, transform .1s;
+  }
+  .btn:active{transform:scale(0.98);}
+  .btn-check{background:var(--ink);color:#fff;}
+  .btn-clear{background:#fff;border:1.5px solid var(--line);color:var(--ink-soft);}
+  .btn-reveal{background:#fff;border:1.5px solid var(--seal);color:var(--seal);}
+  .btn-next{background:var(--gold);color:#fff;display:none;}
+  .btn:disabled{opacity:0.4;cursor:default;}
+
+  .feedback{
+    text-align:center;margin-top:12px;
+    font-family:'IBM Plex Mono', monospace;font-size:13px;min-height:18px;
+  }
+  .feedback.correct{color:var(--correct);}
+  .feedback.wrong{color:var(--wrong);}
+
+  .finish{display:none;text-align:center;padding:40px 20px;}
+  .finish .stamp{
+    width:140px;height:140px;margin:0 auto 18px;
+    border:5px solid var(--seal);border-radius:14px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    color:var(--seal);transform:rotate(-6deg);
+    font-family:'Noto Serif SC', serif;
+  }
+  .finish .stamp .big{font-size:30px;font-weight:900;}
+  .finish .stamp .small{font-family:'IBM Plex Mono', monospace;font-size:11px;margin-top:6px;}
+  .finish h2{font-family:'Noto Serif SC','Noto Serif Thai',serif;margin-bottom:8px;}
+  .finish p{color:var(--ink-soft);margin-bottom:20px;}
+
+  footer{
+    text-align:center;color:var(--ink-soft);
+    font-family:'IBM Plex Mono', monospace;font-size:11px;
+    letter-spacing:1px;margin-top:24px;opacity:.7;
+  }
+
+  @media (max-width:420px){
+    .tile{min-width:36px;height:42px;font-size:17px;}
+    .slot{min-width:32px;height:40px;font-size:16px;}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="hero">
+    <div class="seal-mark">拼</div>
+    <div class="eyebrow">เกมฝึกคำศัพท์ · 拼词游戏</div>
+    <h1>เรียงคำให้ถูกต้อง</h1>
+    <p>ดูโจทย์ แล้วแตะตัวอักษร (รวมวงเล็บ) ให้เรียงถูกต้อง</p>
+    <a class="back-link" href="index.html">← กลับหน้าแรก</a>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="th2ch">ไทย → จีน</button>
+    <button class="tab-btn" data-tab="ch2th">จีน → ไทย</button>
+  </nav>
+
+  <div class="mode-section active" id="mode-th2ch"></div>
+  <div class="mode-section" id="mode-ch2th"></div>
+
+  <footer>เกมฝึกคำศัพท์ปริญญาบัตรไทย-จีน · 57 คำ</footer>
+</div>
+
+<script>
+const WORDS = [{"thai":"วิทยาศาสตรบัณฑิต (สาขาวิชาเกษตรศาสตร์)","chinese":"理学学士（农业科学专业）","pinyin":"lǐ xué xué shì (nóng yè kē xué zhuān yè)"},{"thai":"วิทยาศาสตรบัณฑิต (สาขาวิชาเทคโนโลยีนวัตกรรมการประมง)","chinese":"理学学士（渔业创新技术专业）","pinyin":"lǐ xué xué shì (yú yè chuàng xīn jì shù zhuān yè)"},{"thai":"วิทยาศาสตรบัณฑิต (สาขาวิชาความปลอดภัยทางอาหาร)","chinese":"理学学士（食品安全专业）","pinyin":"lǐ xué xué shì (shí pǐn ān quán zhuān yè)"},{"thai":"วิทยาศาสตรบัณฑิต (สาขาวิชาวิทยาศาสตร์และเทคโนโลยีอาหาร)","chinese":"理学学士（食品科学与技术专业）","pinyin":"lǐ xué xué shì (shí pǐn kē xué yǔ jì shù zhuān yè)"},{"thai":"วิทยาศาสตรบัณฑิต (สาขาวิชาสัตวศาสตร์)","chinese":"理学学士（动物科学专业）","pinyin":"lǐ xué xué shì (dòng wù kē xué zhuān yè)"},{"thai":"เทคโนโลยีบัณฑิต (สาขาวิชาเทคโนโลยีการเกษตร)","chinese":"技术学士（农业技术专业）","pinyin":"jì shù xué shì (nóng yè jì shù zhuān yè)"},{"thai":"ทันตแพทยศาสตรบัณฑิต","chinese":"牙医学士","pinyin":"yá yī xué shì"},{"thai":"ศิลปกรรมศาสตรบัณฑิต (สาขาวิชาคอมพิวเตอร์กราฟิกและมัลติมีเดีย)","chinese":"艺术学士（计算机图形与多媒体专业）","pinyin":"yì shù xué shì (jì suàn jī tú xíng yǔ duō méi tǐ zhuān yè)"},{"thai":"บริหารธุรกิจบัณฑิต (สาขาวิชาธุรกิจดิจิทัล)","chinese":"工商管理学士（数字商务专业）","pinyin":"gōng shāng guǎn lǐ xué shì (shù zì shāng wù zhuān yè)"},{"thai":"วิทยาศาสตรบัณฑิต (สาขาวิชาเทคโนโลยีสารสนเทศ)","chinese":"理学学士（信息技术专业）","pinyin":"lǐ xué xué shì (xìn xī jì shù zhuān yè)"},{"thai":"วิทยาศาสตรบัณฑิต (สาขาวิชาภูมิสารสนเทศศาสตร์)","chinese":"理学学士（地理信息科学专业）","pinyin":"lǐ xué xué shì (dì lǐ xìn xī kē xué zhuān yè)"},{"thai":"วิทยาศาสตรบัณฑิต (สาขาวิชาวิทยาการข้อมูลและการประยุกต์)","chinese":"理学学士（数据科学与应用专业）","pinyin":"lǐ xué xué shì (shù jù kē xué yǔ yìng yòng zhuān yè)"},{"thai":"วิทยาศาสตรบัณฑิต (สาขาวิชาวิทยาการคอมพิวเตอร์)","chinese":"理学学士（计算机科学专业）","pinyin":"lǐ xué xué shì (jì suàn jī kē xué zhuān yè)"},{"thai":"วิศวกรรมศาสตรบัณฑิต (สาขาวิชาวิศวกรรมคอมพิวเตอร์)","chinese":"工程学士（计算机工程专业）","pinyin":"gōng chéng xué shì (jì suàn jī gōng chéng zhuān yè)"},{"thai":"วิศวกรรมศาสตรบัณฑิต (สาขาวิชาวิศวกรรมซอฟต์แวร์)","chinese":"工程学士（软件工程专业）","pinyin":"gōng chéng xué shì (ruǎn jiàn gōng chéng zhuān yè)"},{"thai":"นิติศาสตรบัณฑิต (2563)","chinese":"法学学士（2020年修订）","pinyin":"fǎ xué xué shì (2020 nián xiū dìng)"},{"thai":"เศรษฐศาสตรบัณฑิต (2563)","chinese":"经济学学士（2020年修订）","pinyin":"jīng jì xué xué shì (2020 nián xiū dìng)"},{"thai":"นิเทศศาสตรบัณฑิต (สาขาวิชาการจัดการสื่อสาร)","chinese":"传媒学学士（传播管理专业）","pinyin":"chuán méi xué xué shì (chuán bō guǎn lǐ zhuān yè)"},{"thai":"นิเทศศาสตรบัณฑิต (สาขาวิชาสื่อสารสื่อใหม่)","chinese":"传媒学学士（新媒体传播专业）","pinyin":"chuán méi xué xué shì (xīn méi tǐ chuán bō zhuān yè)"},{"thai":"บริหารธุรกิจบัณฑิต (สาขาวิชาการเงินและการลงทุน)","chinese":"工商管理学士（金融与投资专业）","pinyin":"gōng shāng guǎn lǐ xué shì (jīn róng yǔ tóu zī zhuān yè)"},{"thai":"บริหารธุรกิจบัณฑิต (สาขาวิชาการจัดการธุรกิจ)","chinese":"工商管理学士（工商管理专业）","pinyin":"gōng shāng guǎn lǐ xué shì (gōng shāng guǎn lǐ zhuān yè)"},{"thai":"บริหารธุรกิจบัณฑิต (สาขาวิชาการตลาดดิจิทัล)","chinese":"工商管理学士（数字营销专业）","pinyin":"gōng shāng guǎn lǐ xué shì (shù zì yíng xiāo zhuān yè)"},{"thai":"บัญชีบัณฑิต (2564)","chinese":"会计学学士（2021年修订）","pinyin":"kuài jì xué xué shì (2021 nián xiū dìng)"},{"thai":"ศิลปศาสตรบัณฑิต (สาขาวิชาการท่องเที่ยวและโรงแรม)","chinese":"文学学士（旅游与酒店管理专业）","pinyin":"wén xué xué shì (lǚ yóu yǔ jiǔ diàn guǎn lǐ zhuān yè)"},{"thai":"พยาบาลศาสตรบัณฑิต","chinese":"护理学学士","pinyin":"hù lǐ xué xué shì"},{"thai":"วิศวกรรมศาสตรบัณฑิต (สาขาวิชาวิศวกรรมสิ่งแวดล้อม)","chinese":"工程学学士（环境工程专业）","pinyin":"gōng chéng xué xué shì (huán jìng gōng chéng zhuān yè)"},{"thai":"วิทยาศาสตรบัณฑิต (สาขาวิชาการจัดการพลังงานและสิ่งแวดล้อม)","chinese":"理学学士（能源与环境管理专业）","pinyin":"lǐ xué xué shì (néng yuán yǔ huán jìng guǎn lǐ zhuān yè)"},{"thai":"แพทยศาสตรบัณฑิต","chinese":"医学学士","pinyin":"yī xué xué shì"},{"thai":"เภสัชศาสตรบัณฑิต (สาขาวิชาบริบาลทางเภสัชกรรม)","chinese":"药剂学学士（药物治疗专业）","pinyin":"yào jì xué xué shì (yào wù zhì liáo zhuān yè)"},{"thai":"รัฐประศาสนศาสตรบัณฑิต (สาขาวิชาการจัดการนวัตกรรมสาธารณะ)","chinese":"公共行政学学士（公共创新管理专业）","pinyin":"gōng gòng xíng zhèng xué xué shì (gōng gòng chuàng xīn guǎn lǐ zhuān yè)"},{"thai":"รัฐศาสตรบัณฑิต (2564)","chinese":"政治学学士（2021年修订）","pinyin":"zhèng zhì xué xué shì (2021 nián xiū dìng)"},{"thai":"ศิลปศาสตรบัณฑิต (สาขาวิชาพัฒนาสังคม)","chinese":"文学学士（社会发展专业）","pinyin":"wén xué xué shì (shè huì fā zhǎn zhuān yè)"},{"thai":"วิทยาศาสตรบัณฑิต (สาขาเคมี)","chinese":"理学学士（化学专业）","pinyin":"lǐ xué xué shì (huà xué zhuān yè)"},{"thai":"วิทยาศาสตรบัณฑิต (สาขาวิชาปฏิบัติการฉุกเฉินการแพทย์)","chinese":"理学学士（急诊医学专业）","pinyin":"lǐ xué xué shì (jí zhěn yī xué zhuān yè)"},{"thai":"วิทยาศาสตรบัณฑิต (สาขาวิชาวิทยาศาสตร์เครื่องสำอาง)","chinese":"理学学士（化妆品科学专业）","pinyin":"lǐ xué xué shì (huà zhuāng pǐn kē xué zhuān yè)"},{"thai":"วิทยาศาสตรบัณฑิต (สาขาวิชาคณิตศาสตร์)","chinese":"理学学士（数学专业）","pinyin":"lǐ xué xué shì (shù xué zhuān yè)"},{"thai":"วิทยาศาสตรบัณฑิต (สาขาวิชาชีววิทยา)","chinese":"理学学士（生物学专业）","pinyin":"lǐ xué xué shì (shēng wù xué zhuān yè)"},{"thai":"วิทยาศาสตรบัณฑิต (สาขาวิชาฟิสิกส์)","chinese":"理学学士（物理学专业）","pinyin":"lǐ xué xué shì (wù lǐ xué zhuān yè)"},{"thai":"วิทยาศาสตรบัณฑิต (สาขาวิชาวิทยาศาสตร์การออกกำลังกายและการกีฬา)","chinese":"理学学士（运动科学与体育专业）","pinyin":"lǐ xué xué shì (yùn dòng kē xué yǔ tǐ yù zhuān yè)"},{"thai":"วิทยาศาสตรบัณฑิต (สาขาวิชาสถิติประยุกต์และการจัดการข้อมูล)","chinese":"理学学士（应用统计与数据管理专业）","pinyin":"lǐ xué xué shì (yìng yòng tǒng jì yǔ shù jù guǎn lǐ zhuān yè)"},{"thai":"วิทยาศาสตรบัณฑิต (สาขาวิชาอุตสาหกรรมเคมีและเทคโนโลยีวัสดุ)","chinese":"理学学士（化工业与材料科技专业）","pinyin":"lǐ xué xué shì (huà gōng yè yǔ cái liào kē jì zhuān yè)"},{"thai":"วิศวกรรมศาสตรบัณฑิต (สาขาวิชาวิศวกรรมเครื่องกล)","chinese":"工程学学士（机械工程专业）","pinyin":"gōng chéng xué xué shì (jī xiè gōng chéng zhuān yè)"},{"thai":"วิศวกรรมศาสตรบัณฑิต (สาขาวิชาวิศวกรรมโยธา)","chinese":"工程学学士（土木工程专业）","pinyin":"gōng chéng xué xué shì (tǔ mù gōng chéng zhuān yè)"},{"thai":"วิศวกรรมศาสตรบัณฑิต (สาขาวิชาวิศวกรรมไฟฟ้า)","chinese":"工程学学士（电气工程专业）","pinyin":"gōng chéng xué xué shì (diàn qì gōng chéng zhuān yè)"},{"thai":"วิศวกรรมศาสตรบัณฑิต (สาขาวิชาวิศวกรรมอุตสาหการ)","chinese":"工程学学士（工业工程专业）","pinyin":"gōng chéng xué xué shì (gōng yè gōng chéng zhuān yè)"},{"thai":"ศิลปกรรมศาสตรบัณฑิต (สาขาวิชาดนตรีและนาฏศิลป์)","chinese":"艺术学学士（音乐与舞蹈专业）","pinyin":"yì shù xué xué shì (yīn yuè yǔ wǔ dǎo zhuān yè)"},{"thai":"ศิลปกรรมศาสตรบัณฑิต (สาขาวิชาศิลปะและการออกแบบ)","chinese":"艺术学学士（艺术与设计专业）","pinyin":"yì shù xué shì (yì shù yǔ shè jì zhuān yè)"},{"thai":"สถาปัตยกรรมศาสตรบัณฑิต (สาขาวิชาสถาปัตยกรรม)","chinese":"建筑学学士（建筑学专业）","pinyin":"jiàn zhù xué xué shì (jiàn zhù xué zhuān yè)"},{"thai":"สถาปัตยกรรมศาสตรบัณฑิต (สาขาวิชาสถาปัตยกรรมภายใน)","chinese":"建筑学学士（室内建筑专业）","pinyin":"jiàn zhù xué xué shì (shì nèi jiàn zhù zhuān yè)"},{"thai":"วิทยาศาสตรบัณฑิต (สาขาวิชาเทคนิคการแพทย์)","chinese":"理学学士（医学技术专业）","pinyin":"lǐ xué xué shì (yī xué jì shù zhuān yè)"},{"thai":"กายภาพบำบัดบัณฑิต","chinese":"物理治疗学学士","pinyin":"wù lǐ zhì liáo xué xué shì"},{"thai":"การแพทย์แผนไทยประยุกต์บัณฑิต","chinese":"应用泰国传统医学学士","pinyin":"yìng yòng tài guó chuán tǒng yī xué xué shì"},{"thai":"การแพทย์แผนจีนบัณฑิต","chinese":"中医学学士","pinyin":"zhōng yī xué shì"},{"thai":"วิทยาศาสตรบัณฑิต (สาขาวิชาส่งเสริมสุขภาพ)","chinese":"理学学士（健康促进专业）","pinyin":"lǐ xué xué shì (jiàn kāng cù jìn zhuān yè)"},{"thai":"วิทยาศาสตรบัณฑิต (สาขาวิชาอนามัยสิ่งแวดล้อม)","chinese":"理学学士（环境卫生学专业）","pinyin":"lǐ xué xué shì (huán jìng wèi shēng xué zhuān yè)"},{"thai":"วิทยาศาสตรบัณฑิต (สาขาวิชาอาชีวอนามัยและความปลอดภัย)","chinese":"理学学士（职业健康与安全专业）","pinyin":"lǐ xué xué shì (zhí yè jiàn kāng yǔ ān quán zhuān yè)"},{"thai":"สาธารณสุขศาสตรบัณฑิต (สาขาวิชาอนามัยชุมชน)","chinese":"公共卫生学学士（社区卫生学专业）","pinyin":"gōng gòng wèi shēng xué xué shì (shè qū wèi shēng xué zhuān yè)"}];
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+// Grapheme-ish segmentation: groups combining marks (tone/vowel signs) with
+// the preceding base character so Thai tiles stay legible.
+function segmentClusters(str){
+  const clean = str.replace(/\s+/g, "");
+  const matches = clean.match(/\P{M}\p{M}*/gu);
+  return matches ? matches : clean.split("");
+}
+
+function buildGameHTML(){
+  return `
+    <div class="status-bar">
+      <span>ข้อที่ <b class="qnum">1</b>/<b class="qtotal">57</b></span>
+      <span>คะแนน <b class="score">0</b></span>
+    </div>
+    <div class="game-card">
+      <div class="clue">
+        <div class="label clue-label"></div>
+        <div class="stem clue-stem"></div>
+        <button class="hint-toggle">แสดงพินอิน</button>
+        <div class="hint-display"></div>
+      </div>
+      <div class="answer-slots"></div>
+      <div class="tile-pool"></div>
+      <div class="feedback"></div>
+      <div class="controls">
+        <button class="btn btn-clear">ล้าง</button>
+        <button class="btn btn-reveal">เฉลย</button>
+        <button class="btn btn-check">ตรวจคำตอบ</button>
+        <button class="btn btn-next">ข้อถัดไป →</button>
+      </div>
+    </div>
+    <div class="finish">
+      <div class="stamp"><span class="big final-score">0/57</span><span class="small">完成 · เสร็จสิ้น</span></div>
+      <h2>เล่นครบทุกคำแล้ว!</h2>
+      <p class="finish-detail"></p>
+      <button class="btn btn-check btn-restart" style="max-width:200px;margin:0 auto;">เล่นใหม่</button>
+    </div>
+  `;
+}
+
+function initGame(root, mode){
+  root.innerHTML = buildGameHTML();
+
+  const getClue   = mode === "th2ch" ? (w => w.thai)    : (w => w.chinese);
+  const getTarget = mode === "th2ch" ? (w => w.chinese) : (w => w.thai);
+  const clueLabel = mode === "th2ch" ? "คำแปลไทย" : "คำศัพท์จีน";
+
+  const q = sel => root.querySelector(sel);
+  const el = {
+    qnum: q(".qnum"), qtotal: q(".qtotal"), score: q(".score"),
+    clueLabel: q(".clue-label"), clueStem: q(".clue-stem"),
+    hintBtn: q(".hint-toggle"), hintDisplay: q(".hint-display"),
+    answerSlots: q(".answer-slots"), tilePool: q(".tile-pool"),
+    feedback: q(".feedback"),
+    btnClear: q(".btn-clear"), btnReveal: q(".btn-reveal"),
+    btnCheck: q(".btn-check"), btnNext: q(".btn-next"),
+    gameCard: q(".game-card"), statusBar: q(".status-bar"),
+    finish: q(".finish"), finalScore: q(".final-score"),
+    finishDetail: q(".finish-detail"), btnRestart: q(".btn-restart"),
+  };
+  el.clueLabel.textContent = clueLabel;
+  el.qtotal.textContent = WORDS.length;
+
+  let order = shuffle(WORDS.map((w,i)=>i));
+  let qi = 0, score = 0, answer = [], tiles = [], locked = false;
+
+  function scrambledClusters(clusters){
+    let shuffled;
+    do { shuffled = shuffle(clusters); }
+    while(shuffled.join("") === clusters.join("") && clusters.length > 1);
+    return shuffled;
+  }
+
+  function loadQuestion(){
+    locked = false; answer = [];
+    el.feedback.textContent = ""; el.feedback.className = "feedback";
+    el.answerSlots.className = "answer-slots";
+    el.hintDisplay.textContent = "";
+    el.hintBtn.classList.remove("on");
+    el.hintBtn.textContent = "แสดงพินอิน";
+    el.btnNext.style.display = "none";
+    el.btnCheck.disabled = false; el.btnCheck.style.display = "";
+    el.btnClear.disabled = false; el.btnReveal.disabled = false;
+
+    const w = WORDS[order[qi]];
+    el.clueStem.textContent = getClue(w);
+    el.qnum.textContent = qi + 1;
+
+    const targetClusters = segmentClusters(getTarget(w));
+    const scrambled = scrambledClusters(targetClusters);
+    tiles = scrambled.map((ch, i) => ({ char: ch, id: i, used: false }));
+
+    renderTiles();
+    renderSlots(targetClusters.length);
+  }
+
+  function renderTiles(){
+    el.tilePool.innerHTML = "";
+    tiles.forEach(t => {
+      const btn = document.createElement("button");
+      btn.className = "tile" + (t.used ? " used" : "");
+      btn.textContent = t.char;
+      btn.type = "button";
+      btn.addEventListener("click", () => {
+        if(locked || t.used) return;
+        t.used = true;
+        answer.push(t.id);
+        renderTiles();
+        renderSlots(segmentClusters(getTarget(WORDS[order[qi]])).length);
+      });
+      el.tilePool.appendChild(btn);
+    });
+  }
+
+  function renderSlots(targetLen){
+    el.answerSlots.innerHTML = "";
+    for(let i=0;i<targetLen;i++){
+      const slot = document.createElement("div");
+      const tileId = answer[i];
+      if(tileId !== undefined){
+        const t = tiles.find(tt => tt.id === tileId);
+        slot.className = "slot filled";
+        slot.textContent = t.char;
+        slot.addEventListener("click", () => {
+          if(locked) return;
+          t.used = false;
+          answer.splice(i,1);
+          renderTiles();
+          renderSlots(targetLen);
+        });
+      } else {
+        slot.className = "slot";
+      }
+      el.answerSlots.appendChild(slot);
+    }
+  }
+
+  el.hintBtn.addEventListener("click", () => {
+    const w = WORDS[order[qi]];
+    const on = el.hintBtn.classList.toggle("on");
+    el.hintDisplay.textContent = on ? w.pinyin : "";
+    el.hintBtn.textContent = on ? "ซ่อนพินอิน" : "แสดงพินอิน";
+  });
+
+  el.btnClear.addEventListener("click", () => {
+    if(locked) return;
+    tiles.forEach(t => t.used = false);
+    answer = [];
+    renderTiles();
+    renderSlots(segmentClusters(getTarget(WORDS[order[qi]])).length);
+  });
+
+  el.btnCheck.addEventListener("click", () => {
+    if(locked) return;
+    const w = WORDS[order[qi]];
+    const targetClusters = segmentClusters(getTarget(w));
+    const built = answer.map(id => tiles.find(t => t.id===id).char).join("");
+    if(built.length < targetClusters.join("").length){
+      el.feedback.textContent = "กรุณาเรียงตัวอักษรให้ครบก่อนค่ะ";
+      el.feedback.className = "feedback";
+      return;
+    }
+    if(built === targetClusters.join("")){
+      locked = true; score++;
+      el.score.textContent = score;
+      el.answerSlots.className = "answer-slots correct";
+      el.feedback.textContent = "ถูกต้อง! 正确！";
+      el.feedback.className = "feedback correct";
+      el.btnCheck.style.display = "none";
+      el.btnClear.disabled = true; el.btnReveal.disabled = true;
+      el.btnNext.style.display = "block";
+    } else {
+      el.answerSlots.classList.add("wrong","shake");
+      el.feedback.textContent = "ยังไม่ถูก ลองใหม่อีกครั้งนะคะ";
+      el.feedback.className = "feedback wrong";
+      setTimeout(() => el.answerSlots.classList.remove("shake","wrong"), 400);
+    }
+  });
+
+  el.btnReveal.addEventListener("click", () => {
+    if(locked) return;
+    locked = true;
+    const w = WORDS[order[qi]];
+    const targetClusters = segmentClusters(getTarget(w));
+    tiles.forEach(t => t.used = false);
+    answer = [];
+    targetClusters.forEach(ch => {
+      const t = tiles.find(tt => !tt.used && tt.char === ch);
+      if(t){ t.used = true; answer.push(t.id); }
+    });
+    renderTiles();
+    renderSlots(targetClusters.length);
+    el.feedback.textContent = "เฉลยคำตอบ";
+    el.feedback.className = "feedback";
+    el.btnCheck.style.display = "none";
+    el.btnClear.disabled = true; el.btnReveal.disabled = true;
+    el.btnNext.style.display = "block";
+  });
+
+  el.btnNext.addEventListener("click", () => {
+    qi++;
+    if(qi >= order.length){ showFinish(); } else { loadQuestion(); }
+  });
+
+  function showFinish(){
+    el.gameCard.style.display = "none";
+    el.statusBar.style.display = "none";
+    el.finish.style.display = "block";
+    el.finalScore.textContent = score + "/" + WORDS.length;
+    el.finishDetail.textContent = "ตอบถูกตั้งแต่ครั้งแรก " + score + " จาก " + WORDS.length + " คำ";
+  }
+
+  el.btnRestart.addEventListener("click", () => {
+    order = shuffle(WORDS.map((w,i)=>i));
+    qi = 0; score = 0;
+    el.score.textContent = 0;
+    el.gameCard.style.display = "";
+    el.statusBar.style.display = "";
+    el.finish.style.display = "none";
+    loadQuestion();
+  });
+
+  loadQuestion();
+}
+
+initGame(document.getElementById("mode-th2ch"), "th2ch");
+initGame(document.getElementById("mode-ch2th"), "ch2th");
+
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".mode-section").forEach(s => s.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("mode-" + btn.dataset.tab).classList.add("active");
+    window.scrollTo({top:0, behavior:"smooth"});
+  });
+});
+</script>
+</body>
+</html>
